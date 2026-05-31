@@ -1,24 +1,41 @@
 # 🛡️ Adaptive Network Intrusion Detection System (NIDS)
 
-A Machine Learning-powered Network Intrusion Detection System capable of identifying anomalous network traffic using **Isolation Forests**, explaining detections using **SHAP**, visualizing threats through **Streamlit**, and capturing real-time packets using **PyShark**.
+## Detecting Unknown Network Threats using Machine Learning, Explainable AI and Real-Time Monitoring
+
+### Problem Statement
+
+Traditional Intrusion Detection Systems (IDS) rely heavily on attack signatures and predefined rules. While effective against known attacks, these systems struggle to identify:
+
+- Zero-day attacks
+- Novel malware variants
+- Insider threats
+- Previously unseen attack patterns
+
+As cyber threats evolve rapidly, there is a growing need for adaptive security systems capable of detecting abnormal network behavior without relying solely on known attack signatures.
 
 ---
 
-## 📌 Project Overview
+## Proposed Solution
 
-Traditional firewalls and signature-based Intrusion Detection Systems (IDS) rely on predefined attack signatures. Modern cyber-attacks frequently evolve and change their behavior to evade these signatures.
+This project presents an Adaptive Network Intrusion Detection System (NIDS) that combines:
 
-This project uses **Unsupervised Machine Learning** to learn normal network behavior and identify suspicious traffic patterns without requiring attack labels during training.
+- Machine Learning based anomaly detection
+- Explainable AI (SHAP)
+- Real-time packet capture
+- Live threat monitoring
+- Interactive dashboards
 
-The system combines:
-
-* Machine Learning based anomaly detection
-* Network traffic analysis
-* Explainable AI (XAI)
-* Interactive dashboards
-* Live packet capture
+The system learns normal network behavior from historical traffic and identifies suspicious patterns using Isolation Forests. Live packets are captured using PyShark, analyzed in real time, and visualized through a Streamlit dashboard.
 
 ---
+
+## Objectives
+
+- Detect anomalous network traffic
+- Identify potential cyber threats
+- Provide explainable predictions
+- Monitor live network activity
+- Visualize network behavior through dashboards
 
 ## 🚀 Features
 
@@ -49,12 +66,17 @@ Built using Streamlit.
 
 Dashboard includes:
 
-* Detection Overview
-* Threat Percentage
-* Traffic Distribution Charts
-* Suspicious Flow Explorer
-* SHAP Explainability
-* Feature Importance Ranking
+- Detection Overview KPIs
+- Threat Percentage
+- Traffic Distribution Charts
+- Suspicious Flow Explorer
+- Single Anomaly SHAP Explanation
+- Global SHAP Summary Plot
+- Feature Importance Ranking
+- Live Alert Feed
+- Protocol Distribution Analysis
+- Alert Distribution Analysis
+- CSV Export Functionality
 
 ### ✅ Live Packet Capture
 
@@ -105,6 +127,40 @@ and feeds traffic into the anomaly detection pipeline.
                Live Packet Capture
 ```
 
+## 📡 Real-Time Detection Pipeline
+
+The project includes a live traffic monitoring component.
+
+Workflow:
+
+Internet Traffic
+↓
+PyShark Packet Capture
+↓
+Feature Extraction
+↓
+Feature Scaling
+↓
+Isolation Forest Prediction
+↓
+NORMAL / ALERT Classification
+↓
+alerts.csv Logging
+↓
+Streamlit Dashboard
+
+Captured Information:
+
+- Timestamp
+- Source IP
+- Destination IP
+- Protocol
+- Packet Size
+- Detection Status
+
+Example:
+
+2026-05-31 12:18:58,18.236.121.99,192.168.31.123,TLS,816,NORMAL
 ---
 
 ## 📂 Project Structure

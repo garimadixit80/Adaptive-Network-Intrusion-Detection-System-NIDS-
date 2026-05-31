@@ -16,10 +16,16 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🛡️ Adaptive Network Intrusion Detection System")
-st.caption(
-    "Isolation Forest + CICIDS2017 + SHAP Explainability"
+refresh = st.sidebar.checkbox(
+    "Auto Refresh Live Alerts",
+    value=False
 )
+
+if refresh:
+    st.rerun()
+
+st.title("🛡️ Adaptive Network Intrusion Detection System")
+st.caption("Isolation Forest + CICIDS2017 + SHAP Explainability")
 
 # =====================================
 # PATHS
@@ -55,22 +61,10 @@ model, scaler = load_model()
 
 @st.cache_data
 def load_data():
-
-    df = pd.read_csv(
-        DATA_PATH,
-        nrows=5000
-    )
-
+    df = pd.read_csv(DATA_PATH, nrows=5000)
     df.columns = df.columns.str.strip()
-
-    df.replace(
-        [np.inf, -np.inf],
-        np.nan,
-        inplace=True
-    )
-
+    df.replace([np.inf, -np.inf], np.nan, inplace=True)
     df.dropna(inplace=True)
-
     return df
 
 df = load_data()
@@ -99,18 +93,13 @@ X = df[selected_features]
 # =====================================
 
 X_scaled = scaler.transform(X)
-
 predictions = model.predict(X_scaled)
-
 df["Prediction"] = predictions
 
 normal_count = (predictions == 1).sum()
 anomaly_count = (predictions == -1).sum()
 
-threat_percent = round(
-    anomaly_count / len(df) * 100,
-    2
-)
+threat_percent = round(anomaly_count / len(df) * 100, 2)
 
 # =====================================
 # KPI SECTION
@@ -120,25 +109,10 @@ st.subheader("📊 Detection Overview")
 
 c1, c2, c3, c4 = st.columns(4)
 
-c1.metric(
-    "Flows Analysed",
-    f"{len(df):,}"
-)
-
-c2.metric(
-    "Normal Traffic",
-    f"{normal_count:,}"
-)
-
-c3.metric(
-    "Suspicious Traffic",
-    f"{anomaly_count:,}"
-)
-
-c4.metric(
-    "Threat %",
-    f"{threat_percent}%"
-)
+c1.metric("Flows Analysed", f"{len(df):,}")
+c2.metric("Normal Traffic", f"{normal_count:,}")
+c3.metric("Suspicious Traffic", f"{anomaly_count:,}")
+c4.metric("Threat %", f"{threat_percent}%")
 
 st.divider()
 
@@ -149,30 +123,21 @@ st.divider()
 left, right = st.columns(2)
 
 with left:
-
     st.subheader("Traffic Distribution")
-
     traffic_df = pd.DataFrame({
         "Type": ["Normal", "Suspicious"],
         "Count": [normal_count, anomaly_count]
     })
-
-    st.bar_chart(
-        traffic_df.set_index("Type")
-    )
+    st.bar_chart(traffic_df.set_index("Type"))
 
 with right:
-
     st.subheader("Threat Ratio")
-
     fig, ax = plt.subplots()
-
     ax.pie(
         [normal_count, anomaly_count],
         labels=["Normal", "Suspicious"],
         autopct="%1.1f%%"
     )
-
     st.pyplot(fig)
 
 # =====================================
@@ -180,40 +145,23 @@ with right:
 # =====================================
 
 st.divider()
-
 st.subheader("🚨 Top Suspicious Flows")
 
-anomalies = df[
-    df["Prediction"] == -1
-]
+anomalies = df[df["Prediction"] == -1]
 
-st.dataframe(
-    anomalies.head(100),
-    use_container_width=True
-)
+st.dataframe(anomalies.head(100), use_container_width=True)
 
 st.markdown("---")
 st.subheader("🔍 Explain Selected Anomaly")
 
 if len(anomalies) > 0:
-
     selected_index = st.selectbox(
         "Select an anomaly row",
         anomalies.index.tolist()
     )
-
-    selected_row = anomalies.loc[
-        selected_index,
-        selected_features
-    ]
-
-    st.write(
-        "Selected Flow Features"
-    )
-
-    st.dataframe(
-        selected_row.to_frame()
-    )
+    selected_row = anomalies.loc[selected_index, selected_features]
+    st.write("Selected Flow Features")
+    st.dataframe(selected_row.to_frame())
 
 # =====================================
 # SHAP EXPLAINER (DEFINE ONCE)
@@ -226,65 +174,49 @@ explainer = shap.TreeExplainer(model)
 # =====================================
 
 if len(anomalies) > 0:
-
     st.divider()
-
     st.subheader("🧠 Why Was This Flow Flagged?")
 
-    selected_scaled = scaler.transform(
-        pd.DataFrame([selected_row])
-    )
-
+    selected_scaled = scaler.transform(pd.DataFrame([selected_row]))
     single_shap = explainer.shap_values(selected_scaled)
 
     importance_single = pd.DataFrame({
-    "Feature": selected_features,
-    "SHAP Impact": np.abs(single_shap[0]).astype(float)
-})
+        "Feature": selected_features,
+        "SHAP Impact": np.abs(single_shap[0]).astype(float)
+    })
 
     importance_single = importance_single.sort_values(
         by="SHAP Impact",
         ascending=False
     )
 
-    st.dataframe(importance_single, width="stretch")
+    st.dataframe(importance_single, use_container_width=True)
 
     fig2, ax2 = plt.subplots(figsize=(8, 4))
-
-    ax2.barh(
-        importance_single["Feature"],
-        importance_single["SHAP Impact"]
-    )
-
+    ax2.barh(importance_single["Feature"], importance_single["SHAP Impact"])
     ax2.set_title("Feature Contribution")
-
     st.pyplot(fig2)
-
 
 # =====================================
 # GLOBAL SHAP SUMMARY
 # =====================================
 
 st.divider()
-
 st.subheader("🧠 SHAP Explainability")
 
 sample_size = min(300, len(X_scaled))
 sample = X_scaled[:sample_size]
 
 with st.spinner("Calculating SHAP values..."):
-
     shap_values = explainer.shap_values(sample)
 
 fig, ax = plt.subplots(figsize=(10, 6))
-
 shap.summary_plot(
     shap_values,
     sample,
     feature_names=selected_features,
     show=False
 )
-
 st.pyplot(plt.gcf())
 plt.clf()
 
@@ -294,49 +226,27 @@ plt.clf()
 
 st.subheader("📌 Feature Importance")
 
-importance = np.abs(
-    shap_values
-).mean(axis=0)
+importance = np.abs(shap_values).mean(axis=0)
 
 importance_df = pd.DataFrame({
     "Feature": selected_features,
     "Importance": importance
 })
 
-importance_df = (
-    importance_df
-    .sort_values(
-        by="Importance",
-        ascending=False
-    )
-)
+importance_df = importance_df.sort_values(by="Importance", ascending=False)
 
-st.dataframe(
-    importance_df,
-    use_container_width=True
-)
+st.dataframe(importance_df, use_container_width=True)
 
 # =====================================
 # MODEL DETAILS
 # =====================================
 
 st.divider()
-
 st.subheader("⚙️ Model Information")
 
 info = pd.DataFrame({
-    "Property": [
-        "Model",
-        "Dataset",
-        "Features",
-        "Algorithm Type"
-    ],
-    "Value": [
-        "Isolation Forest",
-        "CIC-IDS2017",
-        len(selected_features),
-        "Unsupervised Learning"
-    ]
+    "Property": ["Model", "Dataset", "Features", "Algorithm Type"],
+    "Value": ["Isolation Forest", "CIC-IDS2017", len(selected_features), "Unsupervised Learning"]
 })
 
 st.table(info)
@@ -345,10 +255,152 @@ st.table(info)
 # DATASET PREVIEW
 # =====================================
 
-with st.expander(
-    "📂 View Dataset Sample"
-):
-    st.dataframe(
-        df.head(100),
-        use_container_width=True
-    )
+with st.expander("📂 View Dataset Sample"):
+    st.dataframe(df.head(100), use_container_width=True)
+
+# =====================================
+# LIVE ALERT FEED
+# =====================================
+
+st.divider()
+st.header("📡 Live Alert Monitoring")
+
+ALERT_PATH = BASE_DIR / "data" / "processed" / "alerts.csv"
+
+if ALERT_PATH.exists():
+
+    try:
+        alerts_df = pd.read_csv(ALERT_PATH)
+
+        if "Status" not in alerts_df.columns:
+            alerts_df = pd.read_csv(
+                ALERT_PATH,
+                names=[
+                    "Timestamp",
+                    "Source_IP",
+                    "Destination_IP",
+                    "Protocol",
+                    "Packet_Size",
+                    "Status"
+                ]
+            )
+
+        total_packets = len(alerts_df)
+
+        total_alerts = (
+            alerts_df["Status"]
+            .astype(str)
+            .str.upper()
+            .eq("ALERT")
+            .sum()
+        )
+
+        total_normal = (
+            alerts_df["Status"]
+            .astype(str)
+            .str.upper()
+            .eq("NORMAL")
+            .sum()
+        )
+
+        threat_score = round(
+            (total_alerts / total_packets) * 100, 2
+        ) if total_packets > 0 else 0
+
+        # =========================
+        # METRICS
+        # =========================
+
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Captured Packets", total_packets)
+        c2.metric("Alerts", total_alerts)
+        c3.metric("Normal", total_normal)
+        c4.metric("Threat Score", f"{threat_score}%")
+
+        # =========================
+        # THREAT LEVEL
+        # =========================
+
+        if threat_score < 20:
+            st.success("🟢 LOW RISK NETWORK")
+        elif threat_score < 50:
+            st.warning("🟡 MEDIUM RISK NETWORK")
+        else:
+            st.error("🔴 HIGH RISK NETWORK")
+
+        st.divider()
+
+        # =========================
+        # RECENT ALERTS
+        # =========================
+
+        st.subheader("🚨 Recent Alerts")
+
+        only_alerts = alerts_df[
+            alerts_df["Status"].astype(str).str.upper() == "ALERT"
+        ]
+
+        if len(only_alerts) > 0:
+            st.dataframe(only_alerts.tail(50), use_container_width=True)
+        else:
+            st.info("No alerts detected.")
+
+        # =========================
+        # TOP SOURCE IPS
+        # =========================
+
+        st.subheader("🌍 Top Source IPs")
+        top_ips = alerts_df["Source_IP"].value_counts().head(10)
+        st.bar_chart(top_ips)
+
+        # =========================
+        # PROTOCOL DISTRIBUTION
+        # =========================
+
+        st.subheader("📡 Protocol Distribution")
+        protocol_counts = alerts_df["Protocol"].value_counts()
+        st.bar_chart(protocol_counts)
+
+        # =========================
+        # ALERT DISTRIBUTION
+        # =========================
+
+        st.subheader("⚠️ Alert Distribution")
+        status_counts = alerts_df["Status"].value_counts()
+        st.bar_chart(status_counts)
+
+        # =========================
+        # TIMELINE
+        # =========================
+
+        st.subheader("⏱ Traffic Timeline")
+
+        alerts_df["Timestamp"] = pd.to_datetime(
+            alerts_df["Timestamp"],
+            errors="coerce"
+        )
+
+        timeline = (
+            alerts_df
+            .groupby(alerts_df["Timestamp"].dt.floor("min"))
+            .size()
+        )
+
+        st.line_chart(timeline)
+
+        # =========================
+        # DOWNLOAD REPORT
+        # =========================
+
+        st.download_button(
+            label="📥 Download Incident Report",
+            data=alerts_df.to_csv(index=False),
+            file_name="incident_report.csv",
+            mime="text/csv"
+        )
+
+    except Exception as e:
+        st.error(f"Live Alert Error: {e}")
+
+else:
+    st.warning("alerts.csv not found.\nRun live_detector.py first.")
