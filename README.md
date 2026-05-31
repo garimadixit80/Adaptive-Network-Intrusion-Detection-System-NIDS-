@@ -37,6 +37,8 @@ The system learns normal network behavior from historical traffic and identifies
 - Monitor live network activity
 - Visualize network behavior through dashboards
 
+---
+
 ## 🚀 Features
 
 ### ✅ Unsupervised Anomaly Detection
@@ -48,9 +50,7 @@ The system learns normal network behavior from historical traffic and identifies
 
 ### ✅ SHAP Explainability
 
-Provides feature-level explanations for anomalies.
-
-Example:
+Provides feature-level explanations for anomalies, helping analysts understand why traffic was flagged.
 
 | Feature            | Impact |
 | ------------------ | ------ |
@@ -58,13 +58,9 @@ Example:
 | Packet Length Mean | +0.37  |
 | Flow Packets/s     | +0.31  |
 
-This helps analysts understand why traffic was flagged.
-
 ### ✅ Interactive Dashboard
 
-Built using Streamlit.
-
-Dashboard includes:
+Built using Streamlit. Includes:
 
 - Detection Overview KPIs
 - Threat Percentage
@@ -80,20 +76,7 @@ Dashboard includes:
 
 ### ✅ Live Packet Capture
 
-Using:
-
-* Wireshark
-* Npcap
-* PyShark
-
-Captures:
-
-* Source IP
-* Destination IP
-* Protocol
-* Packet Size
-
-and feeds traffic into the anomaly detection pipeline.
+Using Wireshark, Npcap, and PyShark. Captures Source IP, Destination IP, Protocol, and Packet Size and feeds traffic into the anomaly detection pipeline.
 
 ---
 
@@ -127,29 +110,29 @@ and feeds traffic into the anomaly detection pipeline.
                Live Packet Capture
 ```
 
+---
+
 ## 📡 Real-Time Detection Pipeline
 
-The project includes a live traffic monitoring component.
-
-Workflow:
-
+```text
 Internet Traffic
-↓
+      ↓
 PyShark Packet Capture
-↓
+      ↓
 Feature Extraction
-↓
+      ↓
 Feature Scaling
-↓
+      ↓
 Isolation Forest Prediction
-↓
+      ↓
 NORMAL / ALERT Classification
-↓
+      ↓
 alerts.csv Logging
-↓
+      ↓
 Streamlit Dashboard
+```
 
-Captured Information:
+Each captured packet logs:
 
 - Timestamp
 - Source IP
@@ -158,11 +141,10 @@ Captured Information:
 - Packet Size
 - Detection Status
 
-Example:
-
+Example log entry:
 2026-05-31 12:18:58,18.236.121.99,192.168.31.123,TLS,816,NORMAL
----
 
+---
 ## 📂 Project Structure
 
 ```text
@@ -197,11 +179,7 @@ nids-project/
 
 ## 📊 Dataset
 
-Dataset Used:
-
-**CIC-IDS2017**
-
-The dataset contains realistic benign and malicious traffic.
+**CIC-IDS2017** — contains realistic benign and malicious traffic.
 
 Attack Categories:
 
@@ -229,8 +207,6 @@ Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv
 
 ## 🔧 Data Preprocessing
 
-The dataset is cleaned using:
-
 ### Remove Infinite Values
 
 ```python
@@ -253,8 +229,6 @@ df.columns = df.columns.str.strip()
 
 ## 🎯 Feature Selection
 
-Selected Features:
-
 ```python
 [
     'Flow Duration',
@@ -270,54 +244,23 @@ Selected Features:
 ]
 ```
 
-These features capture:
-
-* Traffic volume
-* Flow behavior
-* Packet characteristics
-* TCP flag activity
+These features capture traffic volume, flow behavior, packet characteristics, and TCP flag activity.
 
 ---
 
-## 🤖 Machine Learning Model
-
-### Isolation Forest
+## 🤖 Machine Learning Model — Isolation Forest
 
 Isolation Forest is designed specifically for anomaly detection.
 
-#### How It Works
-
-Normal observations:
-
-```text
-Require many splits to isolate
-```
-
-Anomalous observations:
-
-```text
-Require very few splits to isolate
-```
-
-Therefore:
-
-```text
-Fewer Splits = More Suspicious
-```
+Normal observations require many splits to isolate. Anomalous observations require very few splits — so **fewer splits = more suspicious**.
 
 ---
 
 ## 📈 Model Training
 
-Training Dataset:
+Training Dataset: `Monday-WorkingHours.pcap_ISCX.csv`
 
-```text
-Monday-WorkingHours.pcap_ISCX.csv
-```
-
-Reason:
-
-Mostly benign traffic, allowing the model to learn normal network behavior.
+Reason: Mostly benign traffic, allowing the model to learn normal network behavior.
 
 Saved Artifacts:
 
@@ -330,9 +273,7 @@ scaler.pkl
 
 ## 📊 Evaluation Results
 
-Cross-dataset evaluation was performed on all CIC-IDS2017 traffic files.
-
-Sample Results:
+Cross-dataset evaluation across all CIC-IDS2017 traffic files:
 
 | Dataset           | Detection Rate |
 | ----------------- | -------------- |
@@ -342,130 +283,34 @@ Sample Results:
 | Port Scan         | Low Detection  |
 | Web Attacks       | Low Detection  |
 
-These results demonstrate the ability to identify previously unseen attack behavior.
-
 ---
 
 ## 🧠 Explainable AI using SHAP
 
-Most anomaly detection systems act as black boxes.
+SHAP provides both local and global explanations, making the black-box model interpretable.
 
-SHAP provides local and global explanations.
-
-### Global Explainability
-
-Shows:
-
-```text
-Most Important Features Overall
-```
-
-### Local Explainability
-
-Shows:
-
-```text
-Why a Specific Flow Was Flagged
-```
-
-Example:
-
-```text
-Flow Bytes/s          +0.52
-Packet Length Mean    +0.37
-Flow Packets/s        +0.31
-```
-
----
-
-## 📡 Live Packet Capture
-
-Real traffic capture implemented using:
-
-* PyShark
-* Wireshark
-* Npcap
-
-Captured Information:
-
-```text
-Source IP
-Destination IP
-Protocol
-Packet Size
-```
-
-Example:
-
-```text
-192.168.31.123 → 104.46.162.229
-Protocol = TLS
-Packet Size = 1336
-```
+- **Global Explainability** — most important features across all predictions
+- **Local Explainability** — why a specific flow was flagged
 
 ---
 
 ## 📊 Streamlit Dashboard
 
-Run:
-
 ```bash
 streamlit run dashboard/app.py
 ```
 
-Dashboard Features:
-
-### Detection Overview
-
-* Total Flows
-* Normal Traffic
-* Suspicious Traffic
-* Threat Percentage
-
-### Threat Visualization
-
-* Bar Charts
-* Pie Charts
-
-### Suspicious Traffic Explorer
-
-* Displays anomalous flows
-* Interactive analysis
-
-### SHAP Explainability
-
-* Feature Importance
-* Local Explanations
+Dashboard includes Detection Overview, Threat Visualization, Suspicious Traffic Explorer, and SHAP Explainability panels.
 
 ---
 
 ## ⚙️ Installation
 
-Clone Repository:
-
 ```bash
 git clone https://github.com/yourusername/nids-project.git
-
 cd nids-project
-```
-
-Create Virtual Environment:
-
-```bash
 python -m venv venv
-```
-
-Activate Environment:
-
-Windows:
-
-```bash
-venv\Scripts\activate
-```
-
-Install Dependencies:
-
-```bash
+venv\Scripts\activate      # Windows
 pip install -r requirements.txt
 ```
 
@@ -473,33 +318,20 @@ pip install -r requirements.txt
 
 ## ▶️ Usage
 
-### Train Model
-
 ```bash
+# Train model
 python src/model.py
-```
 
-### Evaluate Model
-
-```bash
+# Evaluate model
 python src/evaluate.py
-```
 
-### Start Live Capture
-
-```bash
+# Start live capture
 python src/live_capture.py
-```
 
-### Run Live Detector
-
-```bash
+# Run live detector
 python src/live_detector.py
-```
 
-### Launch Dashboard
-
-```bash
+# Launch dashboard
 streamlit run dashboard/app.py
 ```
 
@@ -516,29 +348,3 @@ streamlit run dashboard/app.py
 * Cloud Deployment
 
 ---
-
-## 💼 Resume Description
-
-**Adaptive Network Intrusion Detection System (NIDS) | Python, Scikit-Learn, SHAP, Streamlit, PyShark**
-
-* Engineered an unsupervised anomaly detection system using Isolation Forests to identify suspicious network traffic patterns.
-* Implemented SHAP-based explainability to provide feature-level reasoning behind anomaly predictions.
-* Developed an interactive Streamlit dashboard for threat visualization and anomaly monitoring.
-* Integrated PyShark and Npcap for live packet capture and real-time traffic inspection.
-* Evaluated performance across multiple CIC-IDS2017 attack scenarios including DDoS, Port Scan, Web Attacks, and Infiltration.
-
----
-
-## 📜 License
-
-This project is intended for educational, research, and portfolio purposes.
-
----
-
-## 👨‍💻 Author
-
-**Garima Dixit**
-
-B.Tech Computer Science & Engineering
-
-Machine Learning | Data Science | Cybersecurity
