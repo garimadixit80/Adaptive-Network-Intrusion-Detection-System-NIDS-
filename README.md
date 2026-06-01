@@ -307,8 +307,8 @@ Dashboard includes Detection Overview, Threat Visualization, Suspicious Traffic 
 ## ⚙️ Installation
 
 ```bash
-git clone https://github.com/yourusername/nids-project.git
-cd nids-project
+git clone https://github.com/garimadixit80/Adaptive-Network-Intrusion-Detection-System-NIDS-.git
+cd Adaptive-Network-Intrusion-Detection-System-NIDS-
 python -m venv venv
 venv\Scripts\activate      # Windows
 pip install -r requirements.txt
